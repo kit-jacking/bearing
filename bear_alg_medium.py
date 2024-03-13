@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import random
 import math
+import numpy as np
 import open3d as o3d
 
 class RANSAC:
@@ -20,16 +21,23 @@ class RANSAC:
         :return:
         """
         inliers, outliers = self._ransac_algorithm(self.max_iterations, self.distance_ratio_threshold)
-        ax = plt.figure().add_subplot(projection='3d')
-        ax.scatter(inliers.X , inliers.Y,  inliers.Z,  c="green", zdir='z')
-        ax.scatter(outliers.X, outliers.Y, outliers.Z, c="red", zdir='z')
-        plt.show()
+        points = np.vstack((inliers.X, inliers.Y, inliers.Z)).T
+        pt_cld = o3d.geometry.PointCloud(points = o3d.utility.Vector3dVector(points))
+        o3d.visualization.draw_geometries([pt_cld])
+        # ax = plt.figure().add_subplot(projection='3d')
+        # ax.scatter(inliers.X , inliers.Y,  inliers.Z,  c="green", zdir='z')
+        # ax.scatter(outliers.X, outliers.Y, outliers.Z, c="red", zdir='z')
+        # plt.show()
 
     def _visualize_point_cloud(self):
         """
         Visualize the 3D data
         :return: None
         """
+        points = np.vstack((self.X, self.Y, self.Z)).T
+        pt_cld = o3d.geometry.PointCloud(points = o3d.utility.Vector3dVector(points))
+        o3d.visualization.draw_geometries([pt_cld])
+        # o3d.visualization.draw_geometries([ori_temp, ref_temp])
         # Visualize the point cloud data
         # fig = plt.figure()
         # ax = Axes3D(fig)
@@ -120,5 +128,5 @@ if __name__ == "__main__":
     pcd = o3d.io.read_point_cloud(r"C:\Users\qattr\Desktop\STUD\SEM 6\FTP2\chmura_punktow_z_dj_phantom_pro_3_cut.pcd")
     # print(np.asarray(pcd.points))
     point_cloud = pd.DataFrame(pcd.points, columns=["X" ,"Y" ,"Z"])
-    APPLICATION = RANSAC(point_cloud, max_iterations=1, distance_ratio_threshold=1)
+    APPLICATION = RANSAC(point_cloud, max_iterations=3, distance_ratio_threshold=0.1)
     APPLICATION.run()
