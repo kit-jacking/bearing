@@ -55,7 +55,6 @@ def create_spheres_on_points(point_cloud: o3d.geometry.PointCloud, radius: float
         spheres.append(sphere)
     return spheres
 
-
 print("Loading point cloud")
 filename = "dane/luk1.ply"
 cloud: o3d.geometry.PointCloud = o3d.io.read_point_cloud(filename)
@@ -87,9 +86,9 @@ cloud.colors = Vector3dVector(np.asarray(
 
 # cropped_cloud = manual_pcd_croppings(cloud)
 
-selected_points_indexes = manual_point_picking(cloud)
-selected_points: o3d.geometry.PointCloud = cloud.select_by_index(selected_points_indexes)
-o3d.io.write_point_cloud("dane/luk1_6punktow.pcd", selected_points, write_ascii=False, compressed=False, print_progress=False)
+# selected_points_indexes = manual_point_picking(cloud)
+# selected_points: o3d.geometry.PointCloud = cloud.select_by_index(selected_points_indexes)
+# o3d.io.write_point_cloud("dane/luk1_6punktow.pcd", selected_points, write_ascii=False, compressed=False, print_progress=False)
 
 # selected_points_spheres = create_spheres_on_points(selected_points, radius=0.05)
-# o3d.visualization.draw_geometries([cloud, *selected_points_spheres])
+# o3d.visualization.draw_geometries([cloud])

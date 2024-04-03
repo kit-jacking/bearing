@@ -11,7 +11,12 @@
   - Wczytaj chmurę punktów
     - Wczytywanie przy pomocy wyskakującego okienka
   - Instrukcja jak się wycina i zapisuje i samo okno wycinania
-  - Zapis do pliku
   - Powrót do menu
-- Wczytaj łuk i wpasuj w niego krzywą
+- Wybierz punkt środkowy i zapisz do pliku
+  - Wczytaj chmurę punktów
+  - Instrukcja jak się wybiera punkt i zapisuje do pliku
+  - Powrót do menu
+- Wczytaj punkt środkowy z pliku
+- Wczytaj łuk
+- Wpasuj krzywą w łuk przy wczytanym łuku i punkcie środkowym
 - Wyjdź z programu
