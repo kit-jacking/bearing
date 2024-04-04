@@ -16,18 +16,21 @@ if __name__ == "__main__":
     while True:
         print("", *menu_message, sep="\n")
 
-        typed = input()
-        if typed.lower() in exit_commands:
-            exit(0)
-        elif typed.lower() == "1":
-            cut_arch()
-        elif typed.lower() == "2":
-            pass
-        elif typed.lower() == "3":
-            pick_point()
-        elif typed.lower() == "4":
-            pass
-        elif typed.lower() == "5":
-            fit_arch()
-        else:
-            print("Nieznana komenda")
+        try:
+            typed = input()
+            if typed.lower() in exit_commands:
+                exit(0)
+            elif typed.lower() == "1":
+                cut_arch()
+            elif typed.lower() == "2":
+                pass
+            elif typed.lower() == "3":
+                pick_point()
+            elif typed.lower() == "4":
+                pass
+            elif typed.lower() == "5":
+                fit_arch()
+            else:
+                print("Nieznana komenda")
+        except:
+            print("Wystąpił błąd")
