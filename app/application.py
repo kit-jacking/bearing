@@ -10,7 +10,7 @@ menu_message = ["Co chcesz zrobić?",
                 "4. Wczytać punkt środkowy z pliku.",
                 "5. Wpasować płaszczyznę w łuk (najpierw wczytaj łuk i punkt środkowy)", ]
 
-exit_commands = ["e", "exit", "leave", "q", "quit", "end", "finish", "3"]
+exit_commands = ["e", "exit", "leave", "q", "quit", "end", "finish"]
 
 if __name__ == "__main__":
     while True:
@@ -19,7 +19,7 @@ if __name__ == "__main__":
         try:
             typed = input()
             if typed.lower() in exit_commands:
-                exit(0)
+                break
             elif typed.lower() == "1":
                 cut_arch()
             elif typed.lower() == "2":
