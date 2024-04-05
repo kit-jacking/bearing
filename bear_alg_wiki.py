@@ -130,6 +130,7 @@ def o3d_choose_points(pt_cloud):
 if __name__ == "__main__":
     
     pt_cld = o3d_load_point_cloud(r"C:\Users\qattr\Desktop\STUD\SEM 6\FTP2\luk3.las")
+    pt_6 = o3d_load_point_cloud(r"C:\Users\qattr\Desktop\STUD\SEM 6\FTP2\luk3_6punktow.las")
     np_arr_pts = np.asarray(pt_cld.points)
     new_arr = np_arr_pts[:,:2]
     print(new_arr)
@@ -137,8 +138,11 @@ if __name__ == "__main__":
     new_Y = np_arr_pts[:,2].reshape(-1,1)
     
     new_X = new_X - new_X.mean()
-    new_Y = new_Y - new_Y.mean()
+    new_Y = new_Y - new_Y.max()
     print(new_Y)
+    
+    # user_X = 
+    # user_Y = 
     
     
     
