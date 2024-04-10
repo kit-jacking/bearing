@@ -33,12 +33,21 @@ if __name__ == "__main__":
             elif typed.lower() == "1":
                 cut_arch()
             elif typed.lower() == "2":
-                pass
+                filename: str = get_cloud_filename()
+                arch: o3d.geometry.PointCloud = o3d.io.read_point_cloud(filename)
             elif typed.lower() == "3":
                 pick_point()
             elif typed.lower() == "4":
-                pass
+                filename: str = get_cloud_filename()
+                middle_point: o3d.geometry.PointCloud = o3d.io.read_point_cloud(filename)
+                if len(middle_point.points) != 1:
+                    middle_point = None
+                    print("Plik z punktem środkowym powinien zawierać dokładnie jeden punkt. Sprawdź czy wybrano odpowiedni plik.")
+                    raise RuntimeError("Middle point should have exactly one point.")
             elif typed.lower() == "5":
+                if middle_point is None or arch is None:
+                    print("Punkt środkowy i łuk muszą zostać najpierw wczytane.")
+                    raise RuntimeError("Middle point and arch should not be None.")
                 fit_arch()
             else:
                 print("Nieznana komenda")
