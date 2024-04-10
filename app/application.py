@@ -20,7 +20,7 @@ if __name__ == "__main__":
                     "5. Wpasować płaszczyznę w łuk. \n Najpierw załaduj łuk [" + (
                         "❌" if arch is None else "✔") + "] i punkt środkowy [" + (
                         "❌" if middle_point is None else "✔") + "]"]
-
+    
     while True:
         menu_message[6] = "5. Wpasować płaszczyznę w łuk. \n Najpierw załaduj łuk [" + (
             "❌" if arch is None else "✔") + "] i punkt środkowy [" + ("❌" if middle_point is None else "✔") + "]"
@@ -29,7 +29,7 @@ if __name__ == "__main__":
         try:
             typed = input()
             if typed.lower() in exit_commands:
-                exit(0)
+                break
             elif typed.lower() == "1":
                 cut_arch()
             elif typed.lower() == "2":
