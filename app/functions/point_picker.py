@@ -1,5 +1,7 @@
 import tkinter.messagebox
 
+import re
+
 import open3d as o3d
 
 from app.common.file_dialogs import get_cloud_filename, get_savefile_path
@@ -30,10 +32,13 @@ def pick_point() -> None:
         print(f"Aby zapisać należy wybrać dokładnie 1 punkt, a nie {len(points_indexes)}. Przerywanie.")
         return
 
-    # save_filename = get_savefile_path()
-    if save_filename == "" or not any([save_filename.endswith(filetype) for filetype in filetypes]):
+    if save_filename != "" and not bool(re.match(re.compile(".*\..*$"), save_filename)):
+        print(f"Z przyczyn niezrozumiałych niedodało się rozszerzenie. Rektyfikuje.")
+        save_filename += '.pcd'
+    elif save_filename == "" or not any([save_filename.endswith(filetype) for filetype in filetypes]):
         print(f"Aby zapisać należy wybrać plik do zapisu {filetypes}. Przerywanie.")
         return
+
 
     o3d.io.write_point_cloud(save_filename, cloud.select_by_index(points_indexes), write_ascii=False, compressed=False,
                              print_progress=False)
