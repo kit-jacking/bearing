@@ -6,7 +6,7 @@ from functions.arch_fitter import fit_arch
 from functions.point_picker import pick_point
 
 if __name__ == "__main__":
-    exit_commands = ["e", "exit", "leave", "q", "quit", "end", "finish", "3"]
+    exit_commands = ["e", "exit", "leave", "q", "quit", "end", "finish"]
 
     arch: o3d.geometry.PointCloud = None
     key_points: o3d.geometry.PointCloud = None
@@ -42,13 +42,14 @@ if __name__ == "__main__":
                 key_points: o3d.geometry.PointCloud = o3d.io.read_point_cloud(filename)
                 if len(key_points.points) != 4:
                     key_points = None
-                    print("Plik z 4 punktami kluczowymi łuku powinien zawierać dokładnie cztery punkty. Sprawdź czy wybrano odpowiedni plik.")
+                    print(
+                        "Plik z 4 punktami kluczowymi łuku powinien zawierać dokładnie cztery punkty. Sprawdź czy wybrano odpowiedni plik.")
                     raise RuntimeError("Key points should have exactly four points.")
             elif typed.lower() == "5":
                 if key_points is None or arch is None:
                     print("4 punkty kluczowe łuku i łuk muszą zostać najpierw wczytane.")
                     raise RuntimeError("Key points and arch should not be 'None'.")
-                fit_arch()
+                fit_arch(key_points, arch)
             else:
                 print("Nieznana komenda")
         except:
