@@ -1,6 +1,6 @@
 import open3d as o3d
 
-from app.common.file_dialogs import get_cloud_filename
+from common.file_dialogs import get_cloud_filename
 from functions.arch_cutter import cut_arch
 from functions.arch_fitter import fit_arch
 from functions.point_picker import pick_point
@@ -30,6 +30,7 @@ if __name__ == "__main__":
             typed = input()
             if typed.lower() in exit_commands:
                 break
+
             elif typed.lower() == "1":
                 cut_arch()
             elif typed.lower() == "2":
