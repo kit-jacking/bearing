@@ -2,7 +2,7 @@ import tkinter.messagebox
 
 import open3d as o3d
 
-from app.common.file_dialogs import get_cloud_filename, get_savefile_path
+from common.file_dialogs import get_cloud_filename, get_savefile_path
 
 
 def manual_point_picking(point_cloud: o3d.geometry.PointCloud):
