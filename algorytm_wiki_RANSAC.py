@@ -91,6 +91,29 @@ def las_to_o3d(file):
 
     return pcd_o3d
 
+def equation_plane(x1, y1, z1, x2, y2, z2, x3, y3, z3): 
+    a1 = x2 - x1
+    b1 = y2 - y1
+    c1 = z2 - z1
+    a2 = x3 - x1
+    b2 = y3 - y1
+    c2 = z3 - z1
+    a = b1 * c2 - b2 * c1
+    b = a2 * c1 - a1 * c2
+    c = a1 * b2 - b1 * a2
+    d = (- a * x1 - b * y1 - c * z1)
+    print ("equation of plane is ", a, "x +", b, "y +", c, "z +", d, "= 0.")
+
+    return a, b, c, d
+
+def point_on_plane(plane_equation, point):
+    a, b, c, d = plane_equation
+    x, y, z = point
+    return a * x + b * y + c * z + d == 0
+
+def map_to_2d(points_3d):
+    return points_3d[:, :2]
+
 if __name__ == "__main__":
 
     # file1 = r"C:\Users\julia\Documents\GEOINFORMATYKA\sem6\APFiWM\projekt_sem\chmury_cc\otwock_freski18.las"
@@ -106,8 +129,24 @@ if __name__ == "__main__":
 
     pkt3 = r"C:\Users\julia\Documents\GEOINFORMATYKA\sem6\APFiWM\projekt_sem\luki\luk3_6punktow.las"
     pkt3_o3d = las_to_o3d(pkt3)
-    # print(np.asarray(pkt3_o3d.points))
+    print(np.asarray(pkt3_o3d.points))
     pivot_pts = np.asarray(pkt3_o3d.points)[0]
+    edge1 = np.asarray(pkt3_o3d.points)[1]
+    edge2 = np.asarray(pkt3_o3d.points)[2]
+
+    plane_equation = equation_plane(pivot_pts[0], pivot_pts[1], pivot_pts[2], edge1[0], edge1[1], edge1[2], edge2[0], edge2[1], edge2[2])
+
+    # Znalezienie punktów należących do płaszczyzny
+    points_on_plane = []
+    for point in xyz_pts:
+        if point_on_plane(plane_equation, point):
+            points_on_plane.append(point)
+    points_on_plane = np.array(points_on_plane)
+
+    print(points_on_plane)
+
+    # Mapowanie punktów 3D do 2D
+    # points_2d = map_to_2d(points_on_plane)
 
     regressor = RANSAC(model=LinearRegressor(), loss=square_error_loss, metric=mean_square_error)
 
