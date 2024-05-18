@@ -1,11 +1,13 @@
-from copy import copy
 import numpy as np
-from numpy.random import default_rng
 import open3d as o3d
-import laspy
 import matplotlib.pyplot as plt
+from copy import copy
+from numpy.random import default_rng
+import laspy
+
 rng = default_rng()
 
+# Implementacja klasy RANSAC
 class RANSAC:
     def __init__(self, n=10, k=1000, t=0.01, d=100, model=None, loss=None, metric=None):
         self.n = n              # `n`: Minimum number of data points to estimate parameters
@@ -77,7 +79,7 @@ def las_to_o3d(file):
     z = las_pcd.z 
 
     # Normalizacja szarosci
-    r = las_pcd.intensity/max(las_pcd.intensity)
+    r = las_pcd.intensity / max(las_pcd.intensity)
     g = r
     b = r
 
@@ -120,25 +122,24 @@ def map_to_2d(points_3d):
 
 if __name__ == "__main__":
 
-    # file1 = r"C:\Users\julia\Documents\GEOINFORMATYKA\sem6\APFiWM\projekt_sem\chmury_cc\otwock_freski18.las"
-    # file1_o3d = las_to_o3d(file1)
-    # file1_down = file1_o3d.uniform_down_sample(100)
-    # o3d.visualization.draw_geometries([file1_o3d])
-
-    luk3 = r"C:\Users\julia\Documents\GEOINFORMATYKA\sem6\APFiWM\projekt_sem\luki\luk3.las"
+    luk3 = r"C:\Users\julia\Documents\GEOINFORMATYKA\sem6\APFiWM\projekt_sem\luki\luk1.las"
     luk3_o3d = las_to_o3d(luk3)
     luk3_down = luk3_o3d.uniform_down_sample(100)
-    xyz_pts = np.asarray(luk3_down.points)
-    # print(xyz_pts[0, :])
+    xyz_pts = np.asarray(luk3_o3d.points)
 
-    pkt3 = r"C:\Users\julia\Documents\GEOINFORMATYKA\sem6\APFiWM\projekt_sem\luki\luk3_6punktow.las"
+    pkt3 = r"C:\Users\julia\Documents\GEOINFORMATYKA\sem6\APFiWM\projekt_sem\luki\luk1_6punktow.las"
     pkt3_o3d = las_to_o3d(pkt3)
-    # print(np.asarray(pkt3_o3d.points))
-    pivot_pts = np.asarray(pkt3_o3d.points)[0]
-    edge1 = np.asarray(pkt3_o3d.points)[1]
-    edge2 = np.asarray(pkt3_o3d.points)[2]
 
-    plane_equation = equation_plane(pivot_pts[0], pivot_pts[1], pivot_pts[2], edge1[0], edge1[1], edge1[2], edge2[0], edge2[1], edge2[2])
+    # Przypisanie punktów z programu Tymonowego
+    center_point = np.asarray(pkt3_o3d.points)[0]
+    left_point = np.asarray(pkt3_o3d.points)[1]
+    right_point = np.asarray(pkt3_o3d.points)[2]
+    depth_point = np.asarray(pkt3_o3d.points)[3]
+
+    depth_dist = center_point[2] - depth_point[2]
+
+    # Równanie płaszczyzny
+    plane_equation = equation_plane(center_point[0], center_point[1], center_point[2], left_point[0], left_point[1], left_point[2], right_point[0], right_point[1], right_point[2])
 
     # Znalezienie punktów należących do płaszczyzny
     points_on_plane = []
@@ -147,46 +148,54 @@ if __name__ == "__main__":
             points_on_plane.append(point)
     points_on_plane = np.array(points_on_plane)
 
+    # Utworzenie punktów przesuniętych o wartość 'depth_dist'
+    points_in_depth = points_on_plane.copy()
+    points_in_depth[:, 2] = points_in_depth[:, 2] - depth_dist
+
     # Mapowanie punktów 3D do 2D
     points_2d = map_to_2d(points_on_plane)
 
     regressor = RANSAC(model=LinearRegressor(), loss=square_error_loss, metric=mean_square_error)
 
+    # Przesunięcie wierzchołka wykresu 
     X_ = points_on_plane[:, 1].reshape(-1,1)
-    X = X_ - pivot_pts[1]
+    X = X_ - center_point[1]
     y_ = points_on_plane[:, 2].reshape(-1,1)
-    y = y_ - pivot_pts[2]
+    y = y_ - center_point[2]
 
     regressor.fit(X, y)
 
-    mn = np.min(np.concatenate([X, y]))
-    mx = np.max(np.concatenate([X, y]))
+    # Wygenerowanie punktów na dopasowanej linii regresji
+    line = np.linspace(np.min(X), np.max(X), num=100).reshape(-1, 1)
+    line_z = regressor.predict(line)
 
-    ax = plt.figure().add_subplot(projection="3d")
-    ax.scatter(X, y, zs=0, zdir="z")
+    # Przywrócenie przesunięcia do oryginalnych współrzędnych
+    line_x = np.full_like(line, center_point[0])
+    line_y = line + center_point[1]
+    line_z += center_point[2]
 
-    line = np.linspace(np.floor(mn), np.ceil(mx), num=100).reshape(-1, 1)
-    plt.plot(line, regressor.predict(line), zs=0, zdir="z", c="peru")
-    plt.show()
+    # Utworzenie punktów w przestrzeni 3D
+    line_points = np.hstack([line_x, line_y, line_z])
 
-    exit()
+    # Łączenie punktów z powierzchnią przesuniętą o głębokość łuku
+    depth_line_points = np.copy(line_points)
+    depth_line_points[:, 0] -= depth_dist
 
-    for i in range(len(xyz_pts[0])):
-        for j in range(len(xyz_pts[0])):
-            if i != j:
-                X_ = xyz_pts[:, i].reshape(-1,1)
-                X = X_ - pivot_pts[i]
-                y_ = xyz_pts[:, j].reshape(-1,1)
-                y = y_ - pivot_pts[j]
+    # Utworzenie obiektu LineSet
+    line_set = o3d.geometry.LineSet()
 
-                regressor.fit(X, y)
+    # Dodanie punktów do LineSet
+    line_points_all = np.vstack((line_points, depth_line_points))
+    line_set.points = o3d.utility.Vector3dVector(line_points_all)
 
-                ax = plt.figure().add_subplot(projection="3d")
-                ax.scatter(X, y, zs=0, zdir="z")
+    # Definiowanie linii łączących kolejne punkty
+    lines = [[i, i+1] for i in range(len(line_points) - 1)]
+    lines += [[i, i + len(line_points)] for i in range(len(line_points))]
+    line_set.lines = o3d.utility.Vector2iVector(lines)
 
-                mn = np.min(np.concatenate([X, y]))
-                mx = np.max(np.concatenate([X, y]))
+    # Ustawienie kolorów (opcjonalnie)
+    colors = [[1, 0, 0] for _ in range(len(lines))]  # czerwone linie
+    line_set.colors = o3d.utility.Vector3dVector(colors)
 
-                line = np.linspace(np.floor(mn), np.ceil(mx), num=1000).reshape(-1, 1)
-                plt.plot(line, regressor.predict(line), zs=0, zdir="z", c="peru")
-                plt.show()
+    # Wizualizacja
+    o3d.visualization.draw_geometries([luk3_o3d, pkt3_o3d, line_set])
