@@ -9,7 +9,7 @@ rng = default_rng()
 
 # Implementacja klasy RANSAC
 class RANSAC:
-    def __init__(self, n=10, k=1000, t=0.01, d=100, model=None, loss=None, metric=None):
+    def __init__(self, n=10, k=2000, t=0.01, d=50, model=None, loss=None, metric=None):
         self.n = n              # `n`: Minimum number of data points to estimate parameters
         self.k = k              # `k`: Maximum iterations allowed
         self.t = t              # `t`: Threshold value to determine if points are fit well
@@ -197,5 +197,37 @@ if __name__ == "__main__":
     colors = [[1, 0, 0] for _ in range(len(lines))]  # czerwone linie
     line_set.colors = o3d.utility.Vector3dVector(colors)
 
+    # # Wizualizacja
+    # o3d.visualization.draw_geometries([luk3_o3d, pkt3_o3d, line_set])
+    
+    # Tworzenie siatki 3D (TriangleMesh) z punktów
+    vertices = line_points_all
+    triangles = []
+    num_points = len(line_points)
+
+    # Dodawanie trójkątów między punktami
+    for i in range(num_points - 1):
+        triangles.append([i, i + 1, i + num_points])
+        triangles.append([i + 1, i + num_points + 1, i + num_points])
+
+    # Konwersja do odpowiednich formatów Open3D
+    mesh = o3d.geometry.TriangleMesh()
+    mesh.vertices = o3d.utility.Vector3dVector(vertices)
+    mesh.triangles = o3d.utility.Vector3iVector(triangles)
+
+    # Ustawienie kolorów dla siatki (opcjonalnie)
+    mesh.vertex_colors = o3d.utility.Vector3dVector([[0, 1, 0] for _ in range(len(vertices))])  # zielone wierzchołki
+
+    # Wygładzanie siatki (opcjonalnie)
+    mesh.compute_vertex_normals()
+    
+    # Tworzenie obiektu PointCloud dla pierwotnych punktów
+    original_points = o3d.geometry.PointCloud()
+    original_points.points = o3d.utility.Vector3dVector(points_on_plane)
+
+    # Ustawienie koloru dla pierwotnych punktów (opcjonalnie)
+    original_colors = np.array([[0, 0, 1] for _ in range(len(points_on_plane))])  # niebieskie punkty
+    original_points.colors = o3d.utility.Vector3dVector(original_colors)
+
     # Wizualizacja
-    o3d.visualization.draw_geometries([luk3_o3d, pkt3_o3d, line_set])
+    o3d.visualization.draw_geometries([mesh, line_set, original_points])
