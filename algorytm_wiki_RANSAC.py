@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 rng = default_rng()
 
 class RANSAC:
-    def __init__(self, n=200, k=2000, t=0.1, d=100, model=None, loss=None, metric=None):
+    def __init__(self, n=10, k=1000, t=0.01, d=100, model=None, loss=None, metric=None):
         self.n = n              # `n`: Minimum number of data points to estimate parameters
         self.k = k              # `k`: Maximum iterations allowed
         self.t = t              # `t`: Threshold value to determine if points are fit well
@@ -109,7 +109,11 @@ def equation_plane(x1, y1, z1, x2, y2, z2, x3, y3, z3):
 def point_on_plane(plane_equation, point):
     a, b, c, d = plane_equation
     x, y, z = point
-    return a * x + b * y + c * z + d == 0
+    result = a * x + b * y + c * z + d
+    if result > -1 and result < 1:
+        return True
+    else:
+        return False
 
 def map_to_2d(points_3d):
     return points_3d[:, :2]
@@ -125,11 +129,11 @@ if __name__ == "__main__":
     luk3_o3d = las_to_o3d(luk3)
     luk3_down = luk3_o3d.uniform_down_sample(100)
     xyz_pts = np.asarray(luk3_down.points)
-    # print(xyz_pts[:, 0])
+    # print(xyz_pts[0, :])
 
     pkt3 = r"C:\Users\julia\Documents\GEOINFORMATYKA\sem6\APFiWM\projekt_sem\luki\luk3_6punktow.las"
     pkt3_o3d = las_to_o3d(pkt3)
-    print(np.asarray(pkt3_o3d.points))
+    # print(np.asarray(pkt3_o3d.points))
     pivot_pts = np.asarray(pkt3_o3d.points)[0]
     edge1 = np.asarray(pkt3_o3d.points)[1]
     edge2 = np.asarray(pkt3_o3d.points)[2]
@@ -143,12 +147,29 @@ if __name__ == "__main__":
             points_on_plane.append(point)
     points_on_plane = np.array(points_on_plane)
 
-    print(points_on_plane)
-
     # Mapowanie punktów 3D do 2D
-    # points_2d = map_to_2d(points_on_plane)
+    points_2d = map_to_2d(points_on_plane)
 
     regressor = RANSAC(model=LinearRegressor(), loss=square_error_loss, metric=mean_square_error)
+
+    X_ = points_on_plane[:, 1].reshape(-1,1)
+    X = X_ - pivot_pts[1]
+    y_ = points_on_plane[:, 2].reshape(-1,1)
+    y = y_ - pivot_pts[2]
+
+    regressor.fit(X, y)
+
+    mn = np.min(np.concatenate([X, y]))
+    mx = np.max(np.concatenate([X, y]))
+
+    ax = plt.figure().add_subplot(projection="3d")
+    ax.scatter(X, y, zs=0, zdir="z")
+
+    line = np.linspace(np.floor(mn), np.ceil(mx), num=100).reshape(-1, 1)
+    plt.plot(line, regressor.predict(line), zs=0, zdir="z", c="peru")
+    plt.show()
+
+    exit()
 
     for i in range(len(xyz_pts[0])):
         for j in range(len(xyz_pts[0])):
