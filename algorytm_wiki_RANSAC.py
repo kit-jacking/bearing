@@ -122,21 +122,21 @@ def map_to_2d(points_3d):
 
 if __name__ == "__main__":
 
-    luk3 = r"C:\Users\julia\Documents\GEOINFORMATYKA\sem6\APFiWM\projekt_sem\luki\luk1.las"
+    luk3 = r"C:\Users\qattr\Desktop\luk1.las"
     luk3_o3d = las_to_o3d(luk3)
     luk3_down = luk3_o3d.uniform_down_sample(100)
     xyz_pts = np.asarray(luk3_o3d.points)
 
-    pkt3 = r"C:\Users\julia\Documents\GEOINFORMATYKA\sem6\APFiWM\projekt_sem\luki\luk1_6punktow.las"
+    pkt3 = r"C:\Users\qattr\Desktop\luk1_4pts.las"
     pkt3_o3d = las_to_o3d(pkt3)
 
     # Przypisanie punktów z programu Tymonowego
-    center_point = np.asarray(pkt3_o3d.points)[0]
-    left_point = np.asarray(pkt3_o3d.points)[1]
-    right_point = np.asarray(pkt3_o3d.points)[2]
+    center_point = np.asarray(pkt3_o3d.points)[2]
+    left_point = np.asarray(pkt3_o3d.points)[0]
+    right_point = np.asarray(pkt3_o3d.points)[1]
     depth_point = np.asarray(pkt3_o3d.points)[3]
 
-    depth_dist = center_point[2] - depth_point[2]
+    depth_dist = center_point[0] - depth_point[0]
 
     # Równanie płaszczyzny
     plane_equation = equation_plane(center_point[0], center_point[1], center_point[2], left_point[0], left_point[1], left_point[2], right_point[0], right_point[1], right_point[2])
