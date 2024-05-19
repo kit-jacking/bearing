@@ -5,6 +5,8 @@ from copy import copy
 from numpy.random import default_rng
 import laspy
 
+print(laspy.__version__)
+
 rng = default_rng()
 
 class RANSAC:
@@ -56,7 +58,7 @@ def square_error_loss(y_true, y_pred):
 def mean_square_error(y_true, y_pred):
     return np.sum(square_error_loss(y_true, y_pred)) / y_true.shape[0]
 
-class LinearRegressor:
+class HyperbolicRegressor:
     def __init__(self):
         self.params = None
 
@@ -69,6 +71,21 @@ class LinearRegressor:
     def predict(self, X: np.ndarray):
         r, _ = X.shape
         X = np.hstack([np.ones((r, 1)), np.cosh(X)])
+        return X @ self.params
+    
+class QuadraticRegressor:
+    def __init__(self):
+        self.params = None
+
+    def fit(self, X: np.ndarray, y: np.ndarray):
+        r, _ = X.shape
+        X = np.hstack([np.ones((r, 1)), X, X**2])
+        self.params = np.linalg.inv(X.T @ X) @ X.T @ y
+        return self
+
+    def predict(self, X: np.ndarray):
+        r, _ = X.shape
+        X = np.hstack([np.ones((r, 1)), X, X**2])
         return X @ self.params
     
 def las_to_o3d(file): 
@@ -199,13 +216,41 @@ def visualize_points(left_point, right_point, center_point, depth_point, points_
     depth_sphere.translate(depth_point)
 
     # Wizualizacja
-    o3d.visualization.draw_geometries([mesh, line_set, original_points, left_sphere, right_sphere, center_sphere, depth_sphere])
+    # o3d.visualization.draw_geometries([mesh, left_sphere, right_sphere, center_sphere, depth_sphere])
+
+    # Ustawienia wizualizacji
+    vis = o3d.visualization.Visualizer()
+    vis.create_window()
+    vis.add_geometry(mesh)
+    # vis.add_geometry(line_set)
+    # vis.add_geometry(original_points)
+    vis.add_geometry(left_sphere)
+    vis.add_geometry(right_sphere)
+    vis.add_geometry(center_sphere)
+    vis.add_geometry(depth_sphere)
+
+    # Włączenie renderowania tylnej strony mesha
+    opt = vis.get_render_option()
+    opt.mesh_show_back_face = True
+
+    vis.run()
+    vis.destroy_window()
 
 def find_fit(arc_filepath, points_filepath):
-    arc_o3d = las_to_o3d(arc_filepath)
-    arc_pts = np.asarray(arc_o3d.points) # xyz_pts
 
-    pts = las_to_o3d(points_filepath)
+    if arc_filepath.endswith(".las"):
+        arc_o3d = las_to_o3d(arc_filepath)
+    elif arc_filepath.endswith(".ply") or arc_filepath.endswith(".pcd"):
+        arc_o3d: o3d.geometry.PointCloud = o3d.io.read_point_cloud(arc_filepath)
+    arc_pts = np.asarray(arc_o3d.points)  
+
+    if points_filepath.endswith(".las"):
+        pts = las_to_o3d(points_filepath)
+    elif points_filepath.endswith(".ply") or points_filepath.endswith(".pcd"):
+        pts: o3d.geometry.PointCloud = o3d.io.read_point_cloud(points_filepath)
+
+    arc_pts = np.asarray(arc_o3d.points) 
+
     left_point = np.asarray(pts.points)[0]
     right_point = np.asarray(pts.points)[1]
     center_point = np.asarray(pts.points)[2]
@@ -229,7 +274,7 @@ def find_fit(arc_filepath, points_filepath):
     points_on_plane = filter_points_by_limits(arc_pts, lower_limit, upper_limit)
 
     # Mapowanie punktów 3D do 2D
-    points_2d = map_to_2d(points_on_plane)
+    # points_2d = map_to_2d(points_on_plane)
 
     # Przesunięcie wierzchołka wykresu 
     X_ = points_on_plane[:, 1].reshape(-1,1)
@@ -238,7 +283,7 @@ def find_fit(arc_filepath, points_filepath):
     y = y_ - center_point[2]
 
     # Dopasowanie punktow 
-    regressor = RANSAC(model=LinearRegressor(), loss=square_error_loss, metric=mean_square_error)
+    regressor = RANSAC(model=QuadraticRegressor(), loss=square_error_loss, metric=mean_square_error)
     regressor.fit(X, y)
 
     # Wygenerowanie punktów na dopasowanej linii regresji
