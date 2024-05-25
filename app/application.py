@@ -1,6 +1,6 @@
 import open3d as o3d
 
-from common.file_dialogs import get_cloud_filename
+from app.functions.file_dialogs import get_cloud_filename
 from functions.arch_cutter import cut_arch
 from functions.arch_fitter import fit_arch
 from functions.point_picker import pick_point
