@@ -2,7 +2,7 @@ import tkinter
 
 import open3d as o3d
 
-from file_dialogs import get_cloud_filename
+from app.functions.file_dialogs import get_cloud_filename
 
 
 def manual_pcd_croppings(point_cloud):
