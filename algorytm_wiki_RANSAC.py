@@ -9,7 +9,7 @@ rng = default_rng()
 
 # Implementacja klasy RANSAC
 class RANSAC:
-    def __init__(self, n=10, k=2000, t=0.01, d=50, model=None, loss=None, metric=None):
+    def __init__(self, n=10, k=2000, t=0.001, d=50, model=None, loss=None, metric=None):
         self.n = n              # `n`: Minimum number of data points to estimate parameters
         self.k = k              # `k`: Maximum iterations allowed
         self.t = t              # `t`: Threshold value to determine if points are fit well
@@ -122,12 +122,12 @@ def map_to_2d(points_3d):
 
 if __name__ == "__main__":
 
-    luk3 = r"C:\Users\qattr\Desktop\luk1.las"
+    luk3 = r"C:\Users\qattr\Desktop\STUD\SEM 6\FTP2\luk1-no-wall.las"
     luk3_o3d = las_to_o3d(luk3)
     luk3_down = luk3_o3d.uniform_down_sample(100)
     xyz_pts = np.asarray(luk3_o3d.points)
 
-    pkt3 = r"C:\Users\qattr\Desktop\luk1_4pts.las"
+    pkt3 = r"C:\Users\qattr\Desktop\STUD\SEM 6\FTP2\luk1_4pts.las"
     pkt3_o3d = las_to_o3d(pkt3)
 
     # Przypisanie punktów z programu Tymonowego
@@ -146,6 +146,12 @@ if __name__ == "__main__":
     for point in xyz_pts:
         if point_on_plane(plane_equation, point):
             points_on_plane.append(point)
+            
+    # Testowe zwiekszenie wagi punktow lewego, srodkowego i lewego
+    for i in range(int(len(points_on_plane)/8)):
+        points_on_plane.extend([left_point, center_point, right_point])
+        
+        
     points_on_plane = np.array(points_on_plane)
 
     # Utworzenie punktów przesuniętych o wartość 'depth_dist'
