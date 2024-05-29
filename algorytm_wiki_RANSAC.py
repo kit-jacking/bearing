@@ -143,7 +143,7 @@ def filter_points_by_limits(points, lower_limit, upper_limit):
 def map_to_2d(points_3d):
     return points_3d[:, :2]
 
-def visualize_points(left_point, right_point, center_point, depth_point, points_on_plane, line_points, depth_line_points):
+def visualize_points(left_point, right_point, center_point, depth_point, points_on_plane, line_points, depth_line_points, points_distance_path):
     # Utworzenie obiektu LineSet
     line_set = o3d.geometry.LineSet()
 
@@ -184,36 +184,60 @@ def visualize_points(left_point, right_point, center_point, depth_point, points_
     # Tworzenie obiektu PointCloud dla pierwotnych punktów
     original_points = o3d.geometry.PointCloud()
     original_points.points = o3d.utility.Vector3dVector(points_on_plane)
+    original_points_array = np.asarray(original_points.points)
+    
+    # Konwersja siatki na chmurę punktów
+    mesh_point_cloud = mesh.sample_points_uniformly(number_of_points=len(vertices))
+    # Obliczanie odległości punktów od siatki
+    distances = np.asarray(original_points.compute_point_cloud_distance(mesh_point_cloud))
+    print(original_points_array)
+    print(distances)
+    
+    with open(points_distance_path, "w") as f:
+        for i in range(len(original_points_array)):
+            f.write(f"{original_points_array[i,0]}, {original_points_array[i,1]}, {original_points_array[i,2]}, {distances[i]}\n")
+        
+    
+    
 
-    # Ustawienie koloru dla pierwotnych punktów (opcjonalnie)
-    original_colors = np.array([[0.5, 0.6, 0.6 ] for _ in range(len(points_on_plane))])  # szare punkty
-    original_points.colors = o3d.utility.Vector3dVector(original_colors)
+    # Normalizacja odległości do przedziału [0, 1]
+    max_distance = np.max(distances)
+    min_distance = np.min(distances)
+    norm_distances = (distances - min_distance) / (max_distance - min_distance)
+
+    # Przekształcenie znormalizowanych odległości na kolory (np. od niebieskiego do czerwonego)
+    colors = np.zeros((len(points_on_plane), 3))
+    colors[:, 0] = norm_distances  # Red channel
+    colors[:, 2] = 1 - norm_distances  # Blue channel
+
+    # Ustawienie koloru dla pierwotnych punktów
+    original_points.colors = o3d.utility.Vector3dVector(colors)
 
     # Zdefiniowanie rozmiaru punktów left, right i center
     point_size = 0.05
 
-    # Utworzenie sfer dla punktów left, right i center
-    left_sphere = o3d.geometry.TriangleMesh.create_sphere(radius=point_size)
-    left_sphere.compute_vertex_normals()
-    left_sphere.paint_uniform_color([1, 0.5, 0])  # Pomarańczowy
+    # # Utworzenie sfer dla punktów left, right i center
+    # left_sphere = o3d.geometry.TriangleMesh.create_sphere(radius=point_size)
+    # left_sphere.compute_vertex_normals()
+    # left_sphere.paint_uniform_color([1, 0.5, 0])  # Pomarańczowy
 
-    right_sphere = o3d.geometry.TriangleMesh.create_sphere(radius=point_size)
-    right_sphere.compute_vertex_normals()
-    right_sphere.paint_uniform_color([1, 1, 0])  # Żółty
+    # right_sphere = o3d.geometry.TriangleMesh.create_sphere(radius=point_size)
+    # right_sphere.compute_vertex_normals()
+    # right_sphere.paint_uniform_color([1, 1, 0])  # Żółty
 
-    center_sphere = o3d.geometry.TriangleMesh.create_sphere(radius=point_size)
-    center_sphere.compute_vertex_normals()
-    center_sphere.paint_uniform_color([1, 0, 1])  # Magenta
+    # center_sphere = o3d.geometry.TriangleMesh.create_sphere(radius=point_size)
+    # center_sphere.compute_vertex_normals()
+    # center_sphere.paint_uniform_color([1, 0, 1])  # Magenta
 
-    depth_sphere = o3d.geometry.TriangleMesh.create_sphere(radius=point_size)
-    depth_sphere.compute_vertex_normals()
-    depth_sphere.paint_uniform_color([0.8, 0.3, 1])  # Fioletowy
+    # depth_sphere = o3d.geometry.TriangleMesh.create_sphere(radius=point_size)
+    # depth_sphere.compute_vertex_normals()
+    # depth_sphere.paint_uniform_color([0.8, 0.3, 1])  # Fioletowy
 
     # Przesunięcie sfer do odpowiednich pozycji
-    left_sphere.translate(left_point)
-    right_sphere.translate(right_point)
-    center_sphere.translate(center_point)
-    depth_sphere.translate(depth_point)
+    # left_sphere.translate(left_point)
+    # right_sphere.translate(right_point)
+    # center_sphere.translate(center_point)
+    # depth_sphere.translate(depth_point)
 
     # Wizualizacja
     # o3d.visualization.draw_geometries([mesh, left_sphere, right_sphere, center_sphere, depth_sphere])
@@ -223,11 +247,11 @@ def visualize_points(left_point, right_point, center_point, depth_point, points_
     vis.create_window()
     vis.add_geometry(mesh)
     # vis.add_geometry(line_set)
-    # vis.add_geometry(original_points)
-    vis.add_geometry(left_sphere)
-    vis.add_geometry(right_sphere)
-    vis.add_geometry(center_sphere)
-    vis.add_geometry(depth_sphere)
+    vis.add_geometry(original_points)
+    # vis.add_geometry(left_sphere)
+    # vis.add_geometry(right_sphere)
+    # vis.add_geometry(center_sphere)
+    # vis.add_geometry(depth_sphere)
 
     # Włączenie renderowania tylnej strony mesha
     opt = vis.get_render_option()
@@ -308,9 +332,9 @@ def find_fit(arc_filepath, points_filepath):
     depth_line_points = np.copy(line_points)
     depth_line_points[:, 0] -= depth_dist
 
-    visualize_points(left_point, right_point, center_point, depth_point, points_on_plane, line_points, depth_line_points)
+    visualize_points(left_point, right_point, center_point, depth_point, points_on_plane, line_points, depth_line_points, r"C:\Users\qattr\Desktop\STUD\SEM 6\FTP2\pts.txt")
 
 if __name__ == "__main__":
     
-    find_fit(r"C:\Users\julia\Documents\GEOINFORMATYKA\sem6\APFiWM\projekt_sem\luki\luk1.las", 
-                r"C:\Users\julia\Documents\GEOINFORMATYKA\sem6\APFiWM\projekt_sem\luki\luk1_4pts_julka.las")
+    find_fit(r"C:\Users\qattr\Desktop\STUD\SEM 6\FTP2\luk1-no-wall.las", 
+                r"C:\Users\qattr\Desktop\STUD\SEM 6\FTP2\luk1_4pts.las")
